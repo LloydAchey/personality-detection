@@ -97,7 +97,7 @@ def train_conv_net(datasets,
         conv_layers.append(conv_layer)
 
 
-    layer0_input = Words[T.cast(x.flatten(),dtype="int32")].reshape((x.shape[0],x.shape[1],x.shape[2],Words.shape[1]))
+    layer0_input = Words[T.cast(x.flatten(),dtype="int64")].reshape((x.shape[0],x.shape[1],x.shape[2],Words.shape[1]))
 
     def convolve_user_statuses(statuses):
         layer1_inputs = []
@@ -109,7 +109,7 @@ def train_conv_net(datasets,
         status_count,_ = theano.scan(fn = sum_mat, sequences=statuses, outputs_info=T.constant(0,dtype=theano.config.floatX))
 
         # Slice-out dummy (zeroed) sentences
-        relv_input=statuses[:T.cast(status_count[-1],dtype='int32')].dimshuffle(0, 'x', 1, 2)
+        relv_input=statuses[:T.cast(status_count[-1],dtype='int64')].dimshuffle(0, 'x', 1, 2)
 
         for conv_layer in conv_layers:
             layer1_inputs.append(conv_layer.set_input(input=relv_input).flatten(2))
@@ -166,7 +166,7 @@ def train_conv_net(datasets,
     n_train_batches = int(np.round(n_batches*0.9))
     #divide train set into train/val sets
     test_set_x = datasets[2]
-    test_set_y = np.asarray(datasets[3],"int32")
+    test_set_y = np.asarray(datasets[3],"int64")
     test_set_m = datasets[5]
     train_set_x, train_set_y, train_set_m = shared_dataset((new_data_x[:n_train_batches*batch_size], new_data_y[:n_train_batches*batch_size], new_data_m[:n_train_batches*batch_size]))
     val_set_x, val_set_y, val_set_m = shared_dataset((new_data_x[n_train_batches*batch_size:], new_data_y[n_train_batches*batch_size:], new_data_m[n_train_batches*batch_size:]))
@@ -195,8 +195,8 @@ def train_conv_net(datasets,
     test_y_pred = classifier.predict(layer1_input)
     test_error = T.sum(T.neq(test_y_pred, y))
     true_p = T.sum(test_y_pred*y)
-    false_p = T.sum(test_y_pred*T.mod(y+T.ones_like(y),T.constant(2,dtype='int32')))
-    false_n = T.sum(y*T.mod(test_y_pred+T.ones_like(y),T.constant(2,dtype='int32')))
+    false_p = T.sum(test_y_pred*T.mod(y+T.ones_like(y),T.constant(2,dtype='int64')))
+    false_n = T.sum(y*T.mod(test_y_pred+T.ones_like(y),T.constant(2,dtype='int64')))
     test_model_all = theano.function([x, y,
                                         mair##mairesse_change
                                         ]
@@ -299,7 +299,7 @@ def shared_dataset(data_xy, borrow=True):
         shared_m = theano.shared(np.asarray(data_m,
                                                dtype=theano.config.floatX),
                                  borrow=borrow)
-        return shared_x, T.cast(shared_y, 'int32'), shared_m
+        return shared_x, T.cast(shared_y, 'int64'), shared_m
 
 def sgd_updates_adadelta(params,cost,rho=0.95,epsilon=1e-6,norm_lim=9,word_vec_name='Words'):
     """
@@ -402,10 +402,10 @@ def make_idx_data_cv(revs, word_idx_map, mairesse, charged_words, cv, per_attr=0
             trainX.append(sent)
             trainY.append(rev['y'+str(per_attr)])
             mTrain.append(mairesse[rev["user"]])
-    trainX = np.array(trainX,dtype="int32")
-    testX = np.array(testX,dtype="int32")
-    trainY = np.array(trainY,dtype="int32")
-    testY = np.array(testY,dtype="int32")
+    trainX = np.array(trainX,dtype="int64")
+    testX = np.array(testX,dtype="int64")
+    trainY = np.array(trainY,dtype="int64")
+    testY = np.array(testY,dtype="int64")
     mTrain = np.array(mTrain, dtype=theano.config.floatX)
     mTest = np.array(mTest, dtype=theano.config.floatX)
     return [trainX, trainY, testX, testY, mTrain, mTest]

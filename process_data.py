@@ -94,6 +94,8 @@ def load_bin_vec(fname, vocab):
         vocab_size, layer1_size = map(int, header.split())
         binary_len = np.dtype(theano.config.floatX).itemsize * layer1_size
         for line in xrange(vocab_size):
+            if line == 1500000:
+                break
             word = []
             while True:
                 ch = f.read(1)
